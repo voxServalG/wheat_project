@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import math
 
 edgevit_configs = {
     'XXS': {
@@ -93,6 +94,35 @@ class ConvDownsampling(nn.Sequential):
         self.add_module('downsampling_norm', nn.GroupNorm(num_groups=1, num_channels=oup))
 
 
+class Regreesor(nn.Sequential):
+    def __init__(self, inp):
+        super().__init__()
+
+        # self.add_module("avg_pool", nn.AdaptiveAvgPool2d())
+
+        n_channel = 1024
+        self.add_module("regr_1", nn.Linear(inp, 1024))
+        self.add_module("relu_1", nn.ReLU())
+
+        self.add_module("regr_2", nn.Linear(1024,512))
+        self.add_module("relu_2", nn.ReLU())
+
+        self.add_module("regr_3", nn.Linear(512,256))
+        self.add_module("relu_3", nn.ReLU())
+
+        self.add_module("regr_4", nn.Linear(256,128))
+        self.add_module("relu_4", nn.ReLU())
+
+        self.add_module("regr_5", nn.Linear(128,64))
+        self.add_module("relu_5", nn.ReLU())
+
+        self.add_module("regr_6", nn.Linear(64,32))
+        self.add_module("relu_6", nn.ReLU())
+
+        self.add_module("regr_fin", nn.Linear(32, 1))
+
+
+
 class EdgeViT(nn.Module):
     def __init__(self, channels, blocks, heads, r=[4, 2, 2, 1], num_classes=1000, distillation=False):
         super().__init__()
@@ -117,6 +147,12 @@ class EdgeViT(nn.Module):
         self.pooling = nn.AdaptiveAvgPool2d(1)
 
         self.classifier = nn.Linear(in_channels, num_classes, bias=True)
+        
+        #
+        self.regressor = Regreesor(1000)
+        #
+
+
 
         if self.distillation:
             self.dist_classifier = nn.Linear(in_channels, num_classes, bias=True)
@@ -125,13 +161,15 @@ class EdgeViT(nn.Module):
         x = self.main_body(x)
         x = self.pooling(x).flatten(1)
 
-        if self.distillation:
-            x = self.classifier(x), self.dist_classifier(x)
+        # if self.distillation:
+        #     x = self.classifier(x), self.dist_classifier(x)
 
-            if not self.training:
-                x = 1/2 * (x[0] + x[1])
-        else:
-            x = self.classifier(x)
+        #     if not self.training:
+        #         x = 1/2 * (x[0] + x[1])
+        # else:
+        #     x = self.classifier(x)
+
+        x = self.regressor(x)
         
         return x
 
@@ -159,3 +197,8 @@ def EdgeViT_S(pretrained=False):
         raise NotImplementedError
     
     return model
+
+
+if __name__ == "__main__":
+    a = EdgeViT_S()
+    print(a)
