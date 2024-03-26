@@ -33,7 +33,22 @@ class MyDataset(Dataset):
         csv_path = os.path.join(self.path_dir, "test_2.csv")
         df = pd.read_csv(csv_path)
         column_name = df.applymap(lambda x: x == img).any().idxmax()   #from elemant content search its column name
-        day_number = re.search(r'_(.*?)_', column_name).group(1) # from column name get its day number(to find if useful)
+
+
+
+        if hasattr(re.search(r'_(.*?)_', column_name), 'group'):  
+            # 如果属性存在，则安全地访问它
+            print(f"{img} OKOKOKOKOKOKOK")
+            day_number = re.search(r'_(.*?)_', column_name).group(1) 
+            # 接下来使用value进行其他操作...  
+        else:  
+            # 如果属性不存在，则处理异常或记录错误  
+            print(f"对象 {img}  ERROR!")  
+            # 可以选择抛出异常、记录日志或进行其他错误处理
+        # day_number = re.search(r'_(.*?)_', column_name).group(1) # from column name get its day number(to find if useful)
+
+
+
         row_indice = np.where(df[column_name] == img)[0][0] # from column name get its row indice
 
         # category = df.species[row_indice]
@@ -53,7 +68,7 @@ if __name__ == '__main__':
         transforms.ToTensor()
     ])
     dataset = MyDataset(path_dir="./datasets", transform=mytransform)
-    image, category, tiller_num = dataset[0]
+    image, tiller_num = dataset[0]
     print(image.shape)
 
     # (img, category) -> tiller_num

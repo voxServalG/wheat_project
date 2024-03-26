@@ -95,28 +95,28 @@ class ConvDownsampling(nn.Sequential):
 
 
 class Regreesor(nn.Sequential):
-    def __init__(self, inp):
+    def __init__(self, inp, bias=False):
         super().__init__()
 
         # self.add_module("avg_pool", nn.AdaptiveAvgPool2d())
 
         n_channel = 1024
-        self.add_module("regr_1", nn.Linear(inp, 1024))
+        self.add_module("regr_1", nn.Linear(inp, 1024, bias=bias))
         self.add_module("relu_1", nn.ReLU())
 
-        self.add_module("regr_2", nn.Linear(1024,512))
+        self.add_module("regr_2", nn.Linear(1024,512,bias=bias))
         self.add_module("relu_2", nn.ReLU())
 
-        self.add_module("regr_3", nn.Linear(512,256))
+        self.add_module("regr_3", nn.Linear(512,256,bias=bias))
         self.add_module("relu_3", nn.ReLU())
 
-        self.add_module("regr_4", nn.Linear(256,128))
+        self.add_module("regr_4", nn.Linear(256,128,bias=bias))
         self.add_module("relu_4", nn.ReLU())
 
-        self.add_module("regr_5", nn.Linear(128,64))
+        self.add_module("regr_5", nn.Linear(128,64,bias=bias))
         self.add_module("relu_5", nn.ReLU())
 
-        self.add_module("regr_6", nn.Linear(64,32))
+        self.add_module("regr_6", nn.Linear(64,32,bias=bias))
         self.add_module("relu_6", nn.ReLU())
 
         self.add_module("regr_fin", nn.Linear(32, 1))
@@ -146,7 +146,7 @@ class EdgeViT(nn.Module):
         self.main_body = nn.Sequential(*l)
         self.pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.classifier = nn.Linear(in_channels, num_classes, bias=True)
+        # self.classifier = nn.Linear(in_channels, num_classes, bias=True)
         
         #
         self.regressor = Regreesor(1000)
