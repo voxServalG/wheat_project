@@ -38,17 +38,17 @@ class MyDataset(Dataset):
 
         if hasattr(re.search(r'_(.*?)_', column_name), 'group'):  
             # 如果属性存在，则安全地访问它
-            print(f"{img} OKOKOKOKOKOKOK")
+            # print(f"{img} OKOKOKOKOKOKOK")
             day_number = re.search(r'_(.*?)_', column_name).group(1) 
             # 接下来使用value进行其他操作...  
         else:  
             # 如果属性不存在，则处理异常或记录错误  
-            print(f"对象 {img}  ERROR!")  
+            print(f"\"{img}\",")  
             # 可以选择抛出异常、记录日志或进行其他错误处理
         # day_number = re.search(r'_(.*?)_', column_name).group(1) # from column name get its day number(to find if useful)
 
 
-
+#######################################################
         row_indice = np.where(df[column_name] == img)[0][0] # from column name get its row indice
 
         # category = df.species[row_indice]
@@ -59,7 +59,8 @@ class MyDataset(Dataset):
         image_tensor = self.transform(image)
 
         return image_tensor, tiller_num
-    
+#######################################################
+        # return 1
 
 
 if __name__ == '__main__':
@@ -68,8 +69,8 @@ if __name__ == '__main__':
         transforms.ToTensor()
     ])
     dataset = MyDataset(path_dir="./datasets", transform=mytransform)
-    image, tiller_num = dataset[0]
-    print(image.shape)
+    for i in range(len(dataset)):
+        _= dataset.__getitem__(i)
 
     # (img, category) -> tiller_num
     # (img, category, (day0, day4 ...)) -> future tiller_num

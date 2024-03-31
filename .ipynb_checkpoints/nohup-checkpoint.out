@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/root/autodl-tmp/wheat_project/train.py", line 2, in <module>
+    from datasets import MyDataset
+  File "/root/autodl-tmp/wheat_project/datasets.py", line 2, in <module>
+    from skimage import io, transform
+ModuleNotFoundError: No module named 'skimage'

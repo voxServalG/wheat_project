@@ -2,3 +2,5 @@
 *.jpg
 photos
 datasets
+runs
+saved_weights
