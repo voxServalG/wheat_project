@@ -133,11 +133,12 @@ def run_edgevit(model, train_dataloader, test_dataloader, num_epochs):
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': train_loss,
-            }, f'saved_weights/edgevits/model_epoch_{epoch + 1}_onehot.pth')
+            }, f'saved_weights/edgevits/model_epoch_{epoch + 1}.pth')
             print("SAVED! epoch {}".format(epoch + 1))
     writer.close()
     print('Finished Training')
 
 
 if __name__ == '__main__':
+    Path("./saved_weights/edgevits").mkdir(parents=True, exist_ok=True)
     run_edgevit(model=model, train_dataloader=train_dataloader, test_dataloader=test_dataloader, num_epochs=num_epochs)
