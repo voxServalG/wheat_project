@@ -63,6 +63,12 @@ class InvertedResidual(nn.Module):
         else:
             return self.conv(x)
 
+class Regressor(nn.Sequential):
+    def __init__(self, in_channel):
+        super().__init__()
+        self.add_module("regr_fin", nn.Linear(in_channel, 1))
+
+
 
 class MobileNetV2(nn.Module):
     def __init__(self, n_class=1000, input_size=224, width_mult=1.):
@@ -101,14 +107,14 @@ class MobileNetV2(nn.Module):
         self.features = nn.Sequential(*self.features)
 
         # building classifier
-        self.classifier = nn.Linear(self.last_channel, n_class)
-
+        # self.classifier = nn.Linear(self.last_channel, n_class)
+        self.regressor = Regressor(self.last_channel)
         self._initialize_weights()
 
     def forward(self, x):
         x = self.features(x)
         x = x.mean(3).mean(2)
-        x = self.classifier(x)
+        x = self.regressor(x)
         return x
 
     def _initialize_weights(self):
@@ -143,3 +149,4 @@ def mobilenet_v2():
 
 if __name__ == '__main__':
     net = mobilenet_v2()
+    print(net)
