@@ -2,4 +2,6 @@
 *.jpg
 photos
 datasets
+runs
+__pycache__
 saved_weights
