@@ -1,8 +1,0 @@
-目标检测
-	YOLO
-
-序列预测
-	CNN? LSTM? EVO(=Energy Valley Optimization)
-
-部署
-	edge computing? GUI?
