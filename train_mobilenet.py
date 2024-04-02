@@ -30,7 +30,7 @@ writer = SummaryWriter()
 
 model = MobileNetV2().to(device)
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=1e-4, betas=(0.9, 0.999))
+optimizer = optim.Adam(model.parameters(), lr=1e-5, betas=(0.9, 0.999))
 mytransform = transforms.Compose([
     transforms.Resize((256, 256)),
     transforms.ToTensor(),

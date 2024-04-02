@@ -55,6 +55,8 @@ class MyDataset(Dataset):
         # category = df.species[row_indice]
         tiller_column_name = "day_" + day_number
         tiller_num = df[tiller_column_name][row_indice]
+
+        tiller_num = (tiller_num - 31) / 470
         #  
         
         image = Image.open(os.path.join(self.path_dir, "photos", img))
