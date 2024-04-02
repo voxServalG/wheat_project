@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 
-batch_size = 32
+batch_size = 64
 shuffle = True
 num_workers = 4
 num_epochs = 100
@@ -21,6 +21,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 test_interval = 1
 save_interval = 10
 start_epoch = -1
+last_train_loss = 100000
 
 use_L1_regularization = False
 L1_lambda = 1e-2
@@ -28,8 +29,8 @@ L1_lambda = 1e-2
 
 writer = SummaryWriter()
 
-model = MobileNetV2().to(device)
-criterion = nn.MSELoss()
+model = MobileNetV2(n_class=18).to(device)
+criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=1e-5, betas=(0.9, 0.999))
 mytransform = transforms.Compose([
     transforms.Resize((256, 256)),
@@ -58,13 +59,13 @@ def train_mobilenet(model, dataloader):
         print("START TRAINING: BATCH {}".format(i + 1))
         inputs, labels = data
         inputs, labels = inputs.to(device), labels.to(device)
-        labels = labels.to(torch.float32)
+        labels = labels.to(torch.int64)
         # 梯度清零  
         model.zero_grad() 
 
         # 前向传播 + 反向传播 + 优化  
         outputs = model(inputs)  
-        outputs = outputs.to(torch.float32)
+        # outputs = outputs.to(torch.int64)
         loss = criterion(outputs, labels)
         
         if use_L1_regularization:
@@ -100,6 +101,7 @@ def test_mobilenet(model, dataloader):
 
 
 def run_mobilenet(model, train_dataloader, test_dataloader, num_epochs):
+    global last_train_loss
     for epoch in range(start_epoch+1, max_epochs):
         print("START TRAINING: EPOCH {}".format(epoch + 1))
         train_loss = train_mobilenet(model=model, dataloader=train_dataloader)
@@ -111,7 +113,8 @@ def run_mobilenet(model, train_dataloader, test_dataloader, num_epochs):
             writer.add_scalar('Loss/test', test_loss, epoch + 1)  
             print(f'Epoch {epoch + 1}, Val loss: {test_loss:.6f}')
 
-        if (epoch + 1) % save_interval == 0:
+        if (epoch + 1) % save_interval == 0 and train_loss < last_train_loss:
+            last_train_loss = train_loss
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
@@ -123,7 +126,7 @@ def run_mobilenet(model, train_dataloader, test_dataloader, num_epochs):
     print('Finished Training')
 
 if __name__ == '__main__':
-    Path("/saved_weights/mobilenet").mkdir(parents=True, exist_ok=True)
+    Path("./saved_weights/mobilenet").mkdir(parents=True, exist_ok=True)
     '''
     pathlib的mkdir接收两个参数：
     parents：如果父目录不存在，是否创建父目录。

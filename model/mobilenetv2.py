@@ -154,5 +154,5 @@ def mobilenet_v2():
 
 
 if __name__ == '__main__':
-    net = mobilenet_v2(n_class = )
+    net = MobileNetV2(n_class=18)
     print(net)

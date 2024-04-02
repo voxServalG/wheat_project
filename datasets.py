@@ -60,11 +60,14 @@ class MyDataset(Dataset):
         # tiller_tensor[int(tiller_num / 25) - 1] = 1
         #  
         tiller_level = int(tiller_num / 25)
+        # a = np.array(tiller_level, dtype='uint8')
+        # tiller_tensor = torch.tensor(a)
+
         image = Image.open(os.path.join(self.path_dir, "photos", img))
         # image_array = np.array(image, dtype='uint8')
         image_tensor = self.transform(image)
 
-        return image_tensor, tiller_num, tiller_level
+        return image_tensor, tiller_level
 #######################################################
         # return 1
 
