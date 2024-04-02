@@ -66,7 +66,13 @@ class InvertedResidual(nn.Module):
 class Regressor(nn.Sequential):
     def __init__(self, in_channel):
         super().__init__()
-        self.add_module("regr_fin", nn.Linear(in_channel, 1))
+        self.add_module("regr_1", nn.Linear(in_channel, 64))
+        self.add_module("acti_1", nn.ReLU())
+
+        self.add_module("regr_2", nn.Linear(64, 32))
+        self.add_module("acti_2", nn.ReLU())
+
+        self.add_module("regr_fin", nn.Linear(32, 1))
 
 
 
