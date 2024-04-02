@@ -55,13 +55,16 @@ class MyDataset(Dataset):
         # category = df.species[row_indice]
         tiller_column_name = "day_" + day_number
         tiller_num = df[tiller_column_name][row_indice]
+
+        # tiller_tensor = np.zeros((19,1))
+        # tiller_tensor[int(tiller_num / 25) - 1] = 1
         #  
-        
+        tiller_level = int(tiller_num / 25)
         image = Image.open(os.path.join(self.path_dir, "photos", img))
         # image_array = np.array(image, dtype='uint8')
         image_tensor = self.transform(image)
 
-        return image_tensor, tiller_num
+        return image_tensor, tiller_num, tiller_level
 #######################################################
         # return 1
 

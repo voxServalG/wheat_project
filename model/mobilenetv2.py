@@ -113,14 +113,14 @@ class MobileNetV2(nn.Module):
         self.features = nn.Sequential(*self.features)
 
         # building classifier
-        # self.classifier = nn.Linear(self.last_channel, n_class)
-        self.regressor = Regressor(self.last_channel)
+        self.classifier = nn.Linear(self.last_channel, n_class)
+        # self.regressor = Regressor(self.last_channel)
         self._initialize_weights()
 
     def forward(self, x):
         x = self.features(x)
         x = x.mean(3).mean(2)
-        x = self.regressor(x)
+        x = self.classifier(x)
         return x
 
     def _initialize_weights(self):
@@ -154,5 +154,5 @@ def mobilenet_v2():
 
 
 if __name__ == '__main__':
-    net = mobilenet_v2()
+    net = mobilenet_v2(n_class = )
     print(net)
