@@ -100,31 +100,31 @@ class Regreesor(nn.Sequential):
 
         # self.add_module("avg_pool", nn.AdaptiveAvgPool2d())
 
-        n_channel = 1024
-        self.add_module("regr_1", nn.Linear(inp, 256, bias=bias))
-        self.add_module("relu_1", nn.ReLU())
+        # n_channel = 1024
+        # self.add_module("regr_1", nn.Linear(inp, 128, bias=bias))
+        # self.add_module("relu_1", nn.Sigmoid())
 
-        self.add_module("regr_2", nn.Linear(256,256,bias=bias))
-        self.add_module("relu_2", nn.ReLU())
+        # self.add_module("regr_2", nn.Linear(128,64,bias=bias))
+        # self.add_module("relu_2", nn.Sigmoid())
 
-        # self.add_module("regr_3", nn.Linear(512,256,bias=bias))
-        # self.add_module("relu_3", nn.ReLU())
+        # self.add_module("regr_3", nn.Linear(64,32,bias=bias))
+        # self.add_module("relu_3", nn.Sigmoid())
 
-        # self.add_module("regr_4", nn.Linear(256,128,bias=bias))
-        # self.add_module("relu_4", nn.ReLU())
+        # # self.add_module("regr_4", nn.Linear(256,128,bias=bias))
+        # # self.add_module("relu_4", nn.ReLU())
 
-        # self.add_module("regr_5", nn.Linear(128,64,bias=bias))
-        # self.add_module("relu_5", nn.ReLU())
+        # # self.add_module("regr_5", nn.Linear(128,64,bias=bias))
+        # # self.add_module("relu_5", nn.ReLU())
 
-        # self.add_module("regr_6", nn.Linear(64,32,bias=bias))
+        # # self.add_module("regr_6", nn.Linear(64,32,bias=bias))
         #self.add_module("relu_6", nn.ReLU())
 
-        self.add_module("regr_fin", nn.Linear(256, 1))
+        self.add_module("regr_fin", nn.Linear(inp, 1))
 
 
 
 class EdgeViT(nn.Module):
-    def __init__(self, channels, blocks, heads, r=[4, 2, 2, 1], num_classes=1000, distillation=False):
+    def __init__(self, channels, blocks, heads, r=[4, 2, 2, 1], num_classes=50, distillation=False):
         super().__init__()
         self.distillation = distillation
         
@@ -144,7 +144,7 @@ class EdgeViT(nn.Module):
             in_channels = num_channels
         
         self.main_body = nn.Sequential(*l)
-        self.pooling = nn.AdaptiveAvgPool2d(1)
+        self.pooling = nn.AdaptiveMaxPool2d(1)
 
         # self.classifier = nn.Linear(in_channels, num_classes, bias=True)
         
@@ -154,8 +154,8 @@ class EdgeViT(nn.Module):
 
 
 
-        if self.distillation:
-            self.dist_classifier = nn.Linear(in_channels, num_classes, bias=True)
+        # if self.distillation:
+        #     self.dist_classifier = nn.Linear(in_channels, num_classes, bias=True)
     
     def forward(self, x):
         x = self.main_body(x)

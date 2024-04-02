@@ -8,26 +8,31 @@ from torchvision import transforms
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
-batch_size = 8
+batch_size = 32
 shuffle = True
-num_workers = 2
+num_workers = 4
 num_epochs = 100
-max_epochs = 1000000
+max_epochs = 400
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-test_interval = 5
-save_interval = 5
+test_interval = 1
+save_interval = 10
 start_epoch = -1
+
+use_L1_regularization = False
+L1_lambda = 1e-2
 
 writer = SummaryWriter()
 
-model = EdgeViT_S().to(device)
+model = EdgeViT_XS().to(device)
+# criterion = nn.MSELoss()
 criterion = nn.MSELoss()
-optimizer = optim.AdamW(model.parameters(), lr=1e-5, betas=(0.9, 0.999))
+optimizer = optim.Adam(model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=1e-2)
 # optimizer = optim.RMSprop(model.parameters(), lr=1e-6, alpha=0.99, eps=1e-08, weight_decay=0, momentum=0)
 # optimizer = optim.SGD(model.parameters(), lr=1e-5, momentum=0.5)
 mytransform = transforms.Compose([
     transforms.Resize((256, 256)),
-    transforms.ToTensor()
+    transforms.ToTensor(),
+    transforms.Normalize(mean=(0.485, 0.456,0.406), std=(0.229, 0.224, 0.225))
 ])
 
 
@@ -88,14 +93,21 @@ def train_edgevit(model, dataloader):
         # 前向传播 + 反向传播 + 优化  
         outputs = model(inputs)  
         outputs = outputs.to(torch.float32)
-        loss = criterion(outputs, labels)  
+        loss = criterion(outputs, labels)
+        
+        if use_L1_regularization:
+            L1_reg = 0  
+            for param in model.parameters():  
+                L1_reg += torch.norm(param, 1)
+            loss += L1_lambda * L1_reg
+            
         running_loss += loss.item()
         loss.backward()  
         optimizer.step()  
 
 
         # 打印统计信息   
-        print('[{}/{} ({:.0f}%)]\tLoss: {:.2f}'.format(  
+        print('[{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(  
             i * batch_size,
             len(dataloader.dataset),  
             100. * i / len(dataloader),
@@ -108,12 +120,12 @@ def run_edgevit(model, train_dataloader, test_dataloader, num_epochs):
         print("START TRAINING: EPOCH {}".format(epoch + 1))
         train_loss = train_edgevit(model=model, dataloader=train_dataloader)
         writer.add_scalar('Loss/train', train_loss, (epoch + 1) * len(train_dataloader))
-        print(f'Epoch {epoch + 1}, Train loss: {train_loss:.2f}')
+        print(f'Epoch {epoch + 1}, Train loss: {train_loss:.6f}')
 
         if (epoch + 1) % test_interval == 0:
             test_loss = test_edgevit(model=model, dataloader=test_dataloader)
             writer.add_scalar('Loss/test', test_loss, epoch + 1)  
-            print(f'Epoch {epoch + 1}, Val loss: {test_loss:.2f}')
+            print(f'Epoch {epoch + 1}, Val loss: {test_loss:.6f}')
 
         if (epoch + 1) % save_interval == 0:
             torch.save({
@@ -121,7 +133,7 @@ def run_edgevit(model, train_dataloader, test_dataloader, num_epochs):
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': train_loss,
-            }, f'saved_weights/edgevits/model_epoch_{epoch + 1}.pth')
+            }, f'saved_weights/edgevits/model_epoch_{epoch + 1}_onehot.pth')
             print("SAVED! epoch {}".format(epoch + 1))
     writer.close()
     print('Finished Training')
