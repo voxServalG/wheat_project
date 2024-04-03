@@ -21,6 +21,7 @@ class MyDataset(Dataset):
         self.train = train
         self.test = test
         self.val = val
+        self.img_string_for_aug = ""
 
     def __len__(self):
         return len(self.images)
@@ -30,10 +31,10 @@ class MyDataset(Dataset):
         tiller_num = None
         img = self.images[index]
 
-        img_string_for_aug = img[0:8] + '.JPG'
+        self.img_string_for_aug = img[0:8] + '.JPG'
         csv_path = os.path.join(self.path_dir, "test_2.csv")
         df = pd.read_csv(csv_path)
-        column_name = df.applymap(lambda x: x == img_string_for_aug).any().idxmax()   #from elemant content search its column name
+        column_name = df.applymap(lambda x: x == self.img_string_for_aug).any().idxmax()   #from elemant content search its column name
 
 
 
@@ -50,7 +51,7 @@ class MyDataset(Dataset):
 
 
 #######################################################
-        row_indice = np.where(df[column_name] == img_string_for_aug)[0][0] # from column name get its row indice
+        row_indice = np.where(df[column_name] == self.img_string_for_aug)[0][0] # from column name get its row indice
 
         # category = df.species[row_indice]
         tiller_column_name = "day_" + day_number
@@ -67,7 +68,7 @@ class MyDataset(Dataset):
         # image_array = np.array(image, dtype='uint8')
         image_tensor = self.transform(image)
 
-        return image_tensor, tiller_level
+        return image_tensor, tiller_level-1
 #######################################################
         # return 1
 

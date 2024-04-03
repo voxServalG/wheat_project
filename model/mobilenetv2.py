@@ -74,7 +74,12 @@ class Regressor(nn.Sequential):
 
         self.add_module("regr_fin", nn.Linear(32, 1))
 
-
+class Classifier(nn.Sequential):
+    def __init__(self, in_channel, out_channel):
+        super().__init__()
+        self.add_module("cla_1", nn.Linear(in_channel, 128))
+        self.add_module("act_1", nn.Sigmoid())
+        self.add_module("fin", nn.Linear(128, out_channel))
 
 class MobileNetV2(nn.Module):
     def __init__(self, n_class=1000, input_size=224, width_mult=1.):
@@ -113,7 +118,7 @@ class MobileNetV2(nn.Module):
         self.features = nn.Sequential(*self.features)
 
         # building classifier
-        self.classifier = nn.Linear(self.last_channel, n_class)
+        self.classifier = Classifier(self.last_channel, n_class)
         # self.regressor = Regressor(self.last_channel)
         self._initialize_weights()
 
@@ -154,5 +159,5 @@ def mobilenet_v2():
 
 
 if __name__ == '__main__':
-    net = MobileNetV2(n_class=18)
+    net = MobileNetV2(n_class=17)
     print(net)

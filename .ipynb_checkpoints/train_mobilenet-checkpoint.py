@@ -9,10 +9,11 @@ from tqdm import tqdm
 from tensorboardX import SummaryWriter
 import os
 from pathlib import Path
+from focalloss import *
 
 
 
-batch_size = 64
+batch_size = 16
 shuffle = True
 num_workers = 4
 num_epochs = 100
@@ -23,15 +24,17 @@ save_interval = 10
 start_epoch = -1
 last_train_loss = 100000
 
-use_L1_regularization = False
-L1_lambda = 1e-2
+use_L1_regularization = True
+L1_lambda = 1e-4
 
+focal_alpha = torch.tensor([0.3584, 0.1686, 0.1346, 0.1698, 0.3390, 0.2801, 0.3546, 0.5556, 0.8333,
+         0.3559, 0.5319, 0.5291, 0.5952, 0.6667, 1.5873, 0.5025, 0.7692])
 
 writer = SummaryWriter()
 
-model = MobileNetV2(n_class=18).to(device)
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=1e-5, betas=(0.9, 0.999))
+model = MobileNetV2(n_class=17).to(device)
+criterion = FocalLoss(17, alpha=focal_alpha, gamma=2, size_average=True)
+optimizer = optim.Adam(model.parameters(), lr=5e-6, betas=(0.9, 0.999))
 mytransform = transforms.Compose([
     transforms.Resize((256, 256)),
     transforms.ToTensor(),
@@ -48,7 +51,7 @@ train_dataloader = DataLoader(dataset=train_dataset,
                         shuffle=True,
                         num_workers=num_workers)
 test_dataloader = DataLoader(dataset=test_dataset,
-                            batch_size=batch_size,
+                            batch_size=1,
                             shuffle=False,
                             num_workers=num_workers)
 
@@ -90,14 +93,26 @@ def train_mobilenet(model, dataloader):
 
 def test_mobilenet(model, dataloader):
     model.eval()
-    loss = 0
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    loss, correct, lvl_error = 0, 0, 0.
     with torch.no_grad():
         for data in dataloader:
             inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)
-            loss = criterion(outputs, labels)
-    return loss.item()
+
+            y_hat = outputs.argmax(axis=1)
+            y = labels
+            print("LABELS IS {}, y_hat is {}".format(labels, y_hat))
+            correct += (y_hat == labels).type(torch.float).sum().item()
+
+            loss += criterion(outputs, labels).item()
+            lvl_error += abs(labels-y_hat)
+    loss /= num_batches
+    accuracy = correct / size
+    lvl_error /= size
+    return loss, accuracy, lvl_error
 
 
 def run_mobilenet(model, train_dataloader, test_dataloader, num_epochs):
@@ -109,9 +124,11 @@ def run_mobilenet(model, train_dataloader, test_dataloader, num_epochs):
         print(f'Epoch {epoch + 1}, Train loss: {train_loss:.6f}')
 
         if (epoch + 1) % test_interval == 0:
-            test_loss = test_mobilenet(model=model, dataloader=test_dataloader)
+            test_loss, test_accuracy, lvl_error = test_mobilenet(model=model, dataloader=test_dataloader)
             writer.add_scalar('Loss/test', test_loss, epoch + 1)  
-            print(f'Epoch {epoch + 1}, Val loss: {test_loss:.6f}')
+            writer.add_scalar('Loss/accuracy', test_accuracy, epoch + 1)  
+            writer.add_scalar('Loss/lvl_error', lvl_error, epoch + 1)
+            print(f'Epoch {epoch + 1}, Val loss: {test_loss:.6f}, Accuracy: {test_accuracy:.3f}, LVL error: {lvl_error}')
 
         if (epoch + 1) % save_interval == 0 and train_loss < last_train_loss:
             last_train_loss = train_loss
@@ -119,7 +136,7 @@ def run_mobilenet(model, train_dataloader, test_dataloader, num_epochs):
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': train_loss,
+                'loss': train_loss
             }, f'saved_weights/mobilenet/model_epoch_{epoch + 1}.pth')
             print("SAVED! epoch {}".format(epoch + 1))
     writer.close()
