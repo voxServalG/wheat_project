@@ -78,8 +78,10 @@ class Classifier(nn.Sequential):
     def __init__(self, in_channel, out_channel):
         super().__init__()
         self.add_module("cla_1", nn.Linear(in_channel, 128))
-        self.add_module("act_1", nn.Sigmoid())
-        self.add_module("fin", nn.Linear(128, out_channel))
+        self.add_module("act_1", nn.ReLU())
+        self.add_module("cla_12", nn.Linear(128,64))
+        self.add_module("act_12", nn.ReLU())
+        self.add_module("fin", nn.Linear(64, out_channel))
 
 class MobileNetV2(nn.Module):
     def __init__(self, n_class=1000, input_size=224, width_mult=1.):

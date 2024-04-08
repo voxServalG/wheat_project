@@ -25,7 +25,7 @@ start_epoch = -1
 last_train_loss = 100000
 
 use_L1_regularization = True
-L1_lambda = 1e-4
+L1_lambda = 1e-5
 
 focal_alpha = torch.tensor([0.3584, 0.1686, 0.1346, 0.1698, 0.3390, 0.2801, 0.3546, 0.5556, 0.8333,
          0.3559, 0.5319, 0.5291, 0.5952, 0.6667, 1.5873, 0.5025, 0.7692])
@@ -34,7 +34,7 @@ writer = SummaryWriter()
 
 model = MobileNetV2(n_class=17).to(device)
 criterion = FocalLoss(17, alpha=focal_alpha, gamma=2, size_average=True)
-optimizer = optim.Adam(model.parameters(), lr=5e-6, betas=(0.9, 0.999))
+optimizer = optim.Adam(model.parameters(), lr=1e-5, betas=(0.9, 0.999))
 mytransform = transforms.Compose([
     transforms.Resize((256, 256)),
     transforms.ToTensor(),
